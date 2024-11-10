@@ -124,7 +124,7 @@ const InvestmentCalculator = () => {
           Investment Calculator
         </CardTitle>
         <p className="text-muted-foreground">
-          Plan your financial future with our easy-to-use investment calculator.
+          Calculate the future value of your monthly investments.
         </p>
       </CardHeader>
 
@@ -274,10 +274,10 @@ const InvestmentCalculator = () => {
                 {calculateBreakdown().map((item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
+                    className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center"
                   >
                     <div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground pb-6">
                         Period {item.period} ({item.years})
                       </div>
                     </div>
