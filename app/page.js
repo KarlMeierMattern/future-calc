@@ -1,101 +1,327 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+const InvestmentCalculator = () => {
+  const [investmentPeriods, setInvestmentPeriods] = useState([
+    { years: 10, monthlyInvestment: 15000 },
+  ]);
+  const [annualReturn, setAnnualReturn] = useState(7.0);
+
+  const addInvestmentPeriod = () => {
+    setInvestmentPeriods([
+      ...investmentPeriods,
+      { years: 10, monthlyInvestment: 15000 },
+    ]);
+  };
+
+  const deleteInvestmentPeriod = (index) => {
+    if (investmentPeriods.length > 1) {
+      const newPeriods = [...investmentPeriods];
+      newPeriods.splice(index, 1);
+      setInvestmentPeriods(newPeriods);
+    }
+  };
+
+  const updatePeriod = (index, field, value) => {
+    const newPeriods = [...investmentPeriods];
+    newPeriods[index][field] = value;
+    setInvestmentPeriods(newPeriods);
+  };
+
+  const calculateInvestmentGrowth = () => {
+    const monthlyReturn = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
+
+    const data = [];
+    let balance = 0;
+    let currentDate = new Date();
+
+    // Add the initial entry (0 balance, start of period)
+    data.push({
+      date: currentDate.toISOString().split("T")[0],
+      balance: balance,
+      period: 0,
+    });
+
+    investmentPeriods.forEach((period, periodIndex) => {
+      for (let month = 0; month < period.years * 12; month++) {
+        balance = (balance + period.monthlyInvestment) * (1 + monthlyReturn);
+        currentDate = new Date(
+          currentDate.setMonth(currentDate.getMonth() + 1)
+        );
+
+        data.push({
+          date: currentDate.toISOString().split("T")[0],
+          balance: Math.round(balance),
+          period: periodIndex + 1,
+        });
+      }
+    });
+
+    return data;
+  };
+
+  const calculatedData = calculateInvestmentGrowth();
+  const finalBalance = calculatedData[calculatedData.length - 1]?.balance || 0;
+  const totalContributions = investmentPeriods.reduce(
+    (acc, period) => acc + period.monthlyInvestment * period.years * 12,
+    0
+  );
+  const totalEarnings = finalBalance - totalContributions;
+
+  // Calculate breakdown data
+  const calculateBreakdown = () => {
+    const breakdown = [];
+    let openingBalance = 0;
+    let startYear = new Date().getFullYear();
+
+    investmentPeriods.forEach((period, index) => {
+      const periodData = calculatedData.filter((d) => d.period === index + 1);
+      const closingBalance = periodData[periodData.length - 1]?.balance || 0;
+      const totalContributions = period.monthlyInvestment * period.years * 12;
+      const totalEarnings =
+        closingBalance - openingBalance - totalContributions;
+      const endYear = startYear + period.years - 1;
+
+      breakdown.push({
+        period: index + 1,
+        years: `${startYear}-${endYear}`,
+        openingBalance,
+        totalContributions,
+        totalEarnings,
+        closingBalance,
+      });
+
+      openingBalance = closingBalance;
+      startYear = endYear + 1;
+    });
+
+    return breakdown;
+  };
+
+  const formatCurrency = (value) => {
+    return `R${value.toLocaleString()}`;
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <CardHeader>
+        <CardTitle className="text-3xl font-bold">
+          Investment Calculator
+        </CardTitle>
+        <p className="text-muted-foreground">
+          Plan your financial future with our easy-to-use investment calculator.
+        </p>
+      </CardHeader>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      <Card>
+        <CardContent className="p-6 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Investment Periods</h3>
+            {investmentPeriods.map((period, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+              >
+                <div>
+                  <label className="text-sm">
+                    Investment period {index + 1} (years)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={period.years}
+                    onChange={(e) =>
+                      updatePeriod(index, "years", parseInt(e.target.value))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Monthly investment (R)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={period.monthlyInvestment}
+                    onChange={(e) =>
+                      updatePeriod(
+                        index,
+                        "monthlyInvestment",
+                        parseFloat(e.target.value)
+                      )
+                    }
+                  />
+                </div>
+                {investmentPeriods.length > 1 && (
+                  <Button
+                    className="mt-6"
+                    variant="destructive"
+                    onClick={() => deleteInvestmentPeriod(index)}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button onClick={addInvestmentPeriod}>Add Investment Period</Button>
+          </div>
+
+          <div>
+            <label className="text-sm">Expected annual return (%)</label>
+            <Slider
+              value={[annualReturn]}
+              onValueChange={(value) => setAnnualReturn(value[0])}
+              min={0}
+              max={20}
+              step={0.1}
+              className="mt-2"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <div className="text-right text-sm text-muted-foreground mt-1">
+              {annualReturn.toFixed(1)}%
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {calculatedData.length > 0 && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Final Balance
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(finalBalance)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Total Contributions
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(totalContributions)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Total Earnings
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(totalEarnings)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-[400px] mt-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={calculatedData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => new Date(date).getFullYear()}
+                    />
+                    <YAxis
+                      tickFormatter={(value) =>
+                        `R${(value / 1000).toFixed(0)}k`
+                      }
+                    />
+                    <Tooltip
+                      formatter={(value) => formatCurrency(value)}
+                      labelFormatter={(date) =>
+                        new Date(date).toLocaleDateString()
+                      }
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="balance"
+                      data={calculatedData}
+                      name="Investment Growth"
+                      stroke="#007AFF"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Investment Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {calculateBreakdown().map((item, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
+                  >
+                    <div>
+                      <div className="text-sm text-muted-foreground">
+                        Period {item.period} ({item.years})
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Opening Balance
+                      </div>
+                      <div className="font-bold">
+                        {formatCurrency(item.openingBalance)}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Total Contributions
+                      </div>
+                      <div className="font-bold">
+                        {formatCurrency(item.totalContributions)}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Total Earnings
+                      </div>
+                      <div className="font-bold">
+                        {formatCurrency(item.totalEarnings)}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Closing Balance
+                      </div>
+                      <div className="font-bold">
+                        {formatCurrency(item.closingBalance)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
-}
+};
+
+export default InvestmentCalculator;
