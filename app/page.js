@@ -1,21 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import Footer from "@/components/footer";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import InvestmentInfo from "@/components/investmentInfo";
+import Header from "@/components/header";
+import Results from "@/components/results";
+import InvestmentBreakdown from "@/components/investmentBreakdown";
 
 const InvestmentCalculator = () => {
   const [startingBalance, setStartingBalance] = useState(0);
@@ -77,15 +67,6 @@ const InvestmentCalculator = () => {
     return data;
   };
 
-  const calculatedData = calculateInvestmentGrowth();
-  const finalBalance = calculatedData[calculatedData.length - 1]?.balance || 0;
-  const totalContributions = investmentPeriods.reduce(
-    (acc, period) => acc + period.monthlyInvestment * period.years * 12,
-    0
-  );
-  const totalEarnings = finalBalance - totalContributions;
-
-  // Calculate breakdown data
   const calculateBreakdown = () => {
     const breakdown = [];
     let openingBalance = startingBalance;
@@ -115,225 +96,37 @@ const InvestmentCalculator = () => {
     return breakdown;
   };
 
-  const formatCurrency = (value) => {
-    return `R${value.toLocaleString()}`;
-  };
+  const calculatedData = calculateInvestmentGrowth();
+  const finalBalance = calculatedData[calculatedData.length - 1]?.balance || 0;
+  const totalContributions = investmentPeriods.reduce(
+    (acc, period) => acc + period.monthlyInvestment * period.years * 12,
+    0
+  );
+  const totalEarnings = finalBalance - totalContributions;
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold">
-          Investment Calculator
-        </CardTitle>
-        <p className="text-muted-foreground">
-          Calculate the future value of your monthly investments.
-        </p>
-      </CardHeader>
-
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          <div>
-            <label className="text-sm">Starting balance (R)</label>
-            <Input
-              type="number"
-              min={0}
-              step={1000}
-              value={startingBalance}
-              onChange={(e) =>
-                setStartingBalance(parseFloat(e.target.value) || 0)
-              }
-              placeholder="Enter your starting balance"
-            />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Investment Periods</h3>
-            {investmentPeriods.map((period, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
-              >
-                <div>
-                  <label className="text-sm">
-                    Investment period {index + 1} (years)
-                  </label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={period.years}
-                    onChange={(e) =>
-                      updatePeriod(index, "years", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-sm">Monthly investment (R)</label>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={100}
-                    value={period.monthlyInvestment}
-                    onChange={(e) =>
-                      updatePeriod(
-                        index,
-                        "monthlyInvestment",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-                {investmentPeriods.length > 1 && (
-                  <Button
-                    className="mt-6"
-                    variant="destructive"
-                    onClick={() => deleteInvestmentPeriod(index)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-            ))}
-            <Button onClick={addInvestmentPeriod}>Add Investment Period</Button>
-          </div>
-
-          <div>
-            <label className="text-sm">Expected annual return (%)</label>
-            <Slider
-              value={[annualReturn]}
-              onValueChange={(value) => setAnnualReturn(value[0])}
-              min={0}
-              max={20}
-              step={0.1}
-              className="mt-2"
-            />
-            <div className="text-right text-sm text-muted-foreground mt-1">
-              {annualReturn.toFixed(1)}%
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Header />
+      <InvestmentInfo
+        startingBalance={startingBalance}
+        setStartingBalance={setStartingBalance}
+        investmentPeriods={investmentPeriods}
+        annualReturn={annualReturn}
+        setAnnualReturn={setAnnualReturn}
+        addInvestmentPeriod={addInvestmentPeriod}
+        deleteInvestmentPeriod={deleteInvestmentPeriod}
+        updatePeriod={updatePeriod}
+      />
 
       {calculatedData.length > 0 && (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">
-                    Final Balance
-                  </div>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(finalBalance)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">
-                    Total Contributions
-                  </div>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(totalContributions)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">
-                    Total Earnings
-                  </div>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(totalEarnings)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-[400px] mt-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={calculatedData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(date) => new Date(date).getFullYear()}
-                    />
-                    <YAxis
-                      tickFormatter={(value) =>
-                        `R${(value / 1000).toFixed(0)}k`
-                      }
-                    />
-                    <Tooltip
-                      formatter={(value) => formatCurrency(value)}
-                      labelFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="balance"
-                      data={calculatedData}
-                      name="Investment Growth"
-                      stroke="#007AFF"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {calculateBreakdown().map((item, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center"
-                  >
-                    <div>
-                      <div className="text-sm text-muted-foreground pb-6">
-                        Period {item.period} ({item.years})
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">
-                        Opening Balance
-                      </div>
-                      <div className="font-bold">
-                        {formatCurrency(item.openingBalance)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">
-                        Total Contributions
-                      </div>
-                      <div className="font-bold">
-                        {formatCurrency(item.totalContributions)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">
-                        Total Earnings
-                      </div>
-                      <div className="font-bold">
-                        {formatCurrency(item.totalEarnings)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">
-                        Closing Balance
-                      </div>
-                      <div className="font-bold">
-                        {formatCurrency(item.closingBalance)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <Results
+            calculatedData={calculatedData}
+            finalBalance={finalBalance}
+            totalContributions={totalContributions}
+            totalEarnings={totalEarnings}
+          />
+          <InvestmentBreakdown calculateBreakdown={calculateBreakdown} />
           <Footer />
         </>
       )}
