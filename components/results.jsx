@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { InvestmentContext } from "@/utils/investmentContext";
+import { useContext } from "react";
 import {
   LineChart,
   Line,
@@ -12,10 +14,10 @@ import {
 } from "recharts";
 
 export default function Results({
-  calculatedData,
   finalBalance,
-  totalContributions,
   totalEarnings,
+  totalContributions,
+  calculatedData,
 }) {
   return (
     <Card>
@@ -27,7 +29,7 @@ export default function Results({
           <div className="text-center">
             <div className="text-sm text-muted-foreground">Final Balance</div>
             <div className="text-2xl font-bold">
-              {formatCurrency(finalBalance)}
+              {formatCurrency(finalBalance || 0)}
             </div>
           </div>
           <div className="text-center">
@@ -35,13 +37,13 @@ export default function Results({
               Total Contributions
             </div>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalContributions)}
+              {formatCurrency(totalContributions || 0)}
             </div>
           </div>
           <div className="text-center">
             <div className="text-sm text-muted-foreground">Total Earnings</div>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalEarnings)}
+              {formatCurrency(totalEarnings || 0)}
             </div>
           </div>
         </div>

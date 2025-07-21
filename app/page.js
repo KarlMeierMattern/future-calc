@@ -6,6 +6,10 @@ import InvestmentInfo from "@/components/investmentInfo";
 import Header from "@/components/header";
 import Results from "@/components/results";
 import InvestmentBreakdown from "@/components/investmentBreakdown";
+import {
+  InvestmentContext,
+  InvestmentDispatchContext,
+} from "@/utils/investmentContext";
 
 // Action types
 const ACTIONS = {
@@ -75,29 +79,6 @@ const InvestmentCalculator = () => {
   const [state, dispatch] = useReducer(investmentReducer, initialState);
   const { startingBalance, investmentPeriods, annualReturn } = state;
 
-  const addInvestmentPeriod = () => {
-    dispatch({ type: ACTIONS.ADD_INVESTMENT_PERIOD });
-  };
-
-  const deleteInvestmentPeriod = (index) => {
-    dispatch({ type: ACTIONS.DELETE_INVESTMENT_PERIOD, payload: index });
-  };
-
-  const updatePeriod = (index, field, value) => {
-    dispatch({
-      type: ACTIONS.UPDATE_INVESTMENT_PERIOD,
-      payload: { index, field, value },
-    });
-  };
-
-  const setStartingBalance = (value) => {
-    dispatch({ type: ACTIONS.SET_STARTING_BALANCE, payload: value });
-  };
-
-  const setAnnualReturn = (value) => {
-    dispatch({ type: ACTIONS.SET_ANNUAL_RETURN, payload: value });
-  };
-
   const calculateInvestmentGrowth = () => {
     const monthlyReturn = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
 
@@ -130,6 +111,14 @@ const InvestmentCalculator = () => {
     return data;
   };
 
+  const calculatedData = calculateInvestmentGrowth();
+  const finalBalance = calculatedData[calculatedData.length - 1]?.balance || 0;
+  const totalContributions = investmentPeriods.reduce(
+    (acc, period) => acc + period.monthlyInvestment * period.years * 12,
+    0
+  );
+  const totalEarnings = finalBalance - totalContributions;
+
   const calculateBreakdown = () => {
     const breakdown = [];
     let openingBalance = startingBalance;
@@ -159,41 +148,28 @@ const InvestmentCalculator = () => {
     return breakdown;
   };
 
-  const calculatedData = calculateInvestmentGrowth();
-  const finalBalance = calculatedData[calculatedData.length - 1]?.balance || 0;
-  const totalContributions = investmentPeriods.reduce(
-    (acc, period) => acc + period.monthlyInvestment * period.years * 12,
-    0
-  );
-  const totalEarnings = finalBalance - totalContributions;
-
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <Header />
-      <InvestmentInfo
-        startingBalance={startingBalance}
-        setStartingBalance={setStartingBalance}
-        investmentPeriods={investmentPeriods}
-        annualReturn={annualReturn}
-        setAnnualReturn={setAnnualReturn}
-        addInvestmentPeriod={addInvestmentPeriod}
-        deleteInvestmentPeriod={deleteInvestmentPeriod}
-        updatePeriod={updatePeriod}
-      />
+    <InvestmentContext value={state}>
+      <InvestmentDispatchContext value={dispatch}>
+        <div className="max-w-4xl mx-auto p-4 space-y-6">
+          <Header />
+          <InvestmentInfo />
 
-      {calculatedData.length > 0 && (
-        <>
-          <Results
-            calculatedData={calculatedData}
-            finalBalance={finalBalance}
-            totalContributions={totalContributions}
-            totalEarnings={totalEarnings}
-          />
-          <InvestmentBreakdown calculateBreakdown={calculateBreakdown} />
-          <Footer />
-        </>
-      )}
-    </div>
+          {calculatedData.length > 0 && (
+            <>
+              <Results
+                finalBalance={finalBalance}
+                totalEarnings={totalEarnings}
+                totalContributions={totalContributions}
+                calculatedData={calculatedData}
+              />
+              <InvestmentBreakdown calculateBreakdown={calculateBreakdown} />
+              <Footer />
+            </>
+          )}
+        </div>
+      </InvestmentDispatchContext>
+    </InvestmentContext>
   );
 };
 

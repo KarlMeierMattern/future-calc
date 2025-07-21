@@ -2,17 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import {
+  InvestmentContext,
+  InvestmentDispatchContext,
+} from "@/utils/investmentContext";
+import { useContext } from "react";
 
-export default function InvestmentInfo({
-  startingBalance,
-  setStartingBalance,
-  investmentPeriods,
-  addInvestmentPeriod,
-  deleteInvestmentPeriod,
-  updatePeriod,
-  annualReturn,
-  setAnnualReturn,
-}) {
+export default function InvestmentInfo() {
+  const { startingBalance, investmentPeriods, annualReturn } =
+    useContext(InvestmentContext);
+
+  const dispatch = useContext(InvestmentDispatchContext);
+
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
@@ -24,7 +25,10 @@ export default function InvestmentInfo({
             step={1000}
             value={startingBalance}
             onChange={(e) =>
-              setStartingBalance(parseFloat(e.target.value) || 0)
+              dispatch({
+                type: "SET_STARTING_BALANCE",
+                payload: parseFloat(e.target.value) || 0,
+              })
             }
             placeholder="Enter your starting balance"
           />
@@ -46,7 +50,14 @@ export default function InvestmentInfo({
                   min={1}
                   value={period.years}
                   onChange={(e) =>
-                    updatePeriod(index, "years", parseInt(e.target.value))
+                    dispatch({
+                      type: "UPDATE_INVESTMENT_PERIOD",
+                      payload: {
+                        index,
+                        field: "years",
+                        value: parseInt(e.target.value),
+                      },
+                    })
                   }
                 />
               </div>
@@ -70,21 +81,33 @@ export default function InvestmentInfo({
                 <Button
                   className="mt-6"
                   variant="destructive"
-                  onClick={() => deleteInvestmentPeriod(index)}
+                  onClick={() =>
+                    dispatch({
+                      type: "DELETE_INVESTMENT_PERIOD",
+                      payload: index,
+                    })
+                  }
                 >
                   Delete
                 </Button>
               )}
             </div>
           ))}
-          <Button onClick={addInvestmentPeriod}>Add Investment Period</Button>
+          <Button onClick={() => dispatch({ type: "ADD_INVESTMENT_PERIOD" })}>
+            Add Investment Period
+          </Button>
         </div>
 
         <div>
           <label className="text-sm">Expected annual return (%)</label>
           <Slider
             value={[annualReturn]}
-            onValueChange={(value) => setAnnualReturn(value[0])}
+            onValueChange={(value) =>
+              dispatch({
+                type: "SET_ANNUAL_RETURN",
+                payload: value[0],
+              })
+            }
             min={0}
             max={20}
             step={0.1}
