@@ -1,38 +1,101 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 import Footer from "@/components/footer";
 import InvestmentInfo from "@/components/investmentInfo";
 import Header from "@/components/header";
 import Results from "@/components/results";
 import InvestmentBreakdown from "@/components/investmentBreakdown";
 
+// Action types
+const ACTIONS = {
+  SET_STARTING_BALANCE: "SET_STARTING_BALANCE",
+  SET_ANNUAL_RETURN: "SET_ANNUAL_RETURN",
+  ADD_INVESTMENT_PERIOD: "ADD_INVESTMENT_PERIOD",
+  DELETE_INVESTMENT_PERIOD: "DELETE_INVESTMENT_PERIOD",
+  UPDATE_INVESTMENT_PERIOD: "UPDATE_INVESTMENT_PERIOD",
+};
+
+// Initial state
+const initialState = {
+  startingBalance: 0,
+  investmentPeriods: [{ years: 10, monthlyInvestment: 15000 }],
+  annualReturn: 10.0,
+};
+
+// Reducer function
+const investmentReducer = (state, action) => {
+  switch (action.type) {
+    case ACTIONS.SET_STARTING_BALANCE:
+      return {
+        ...state,
+        startingBalance: action.payload,
+      };
+
+    case ACTIONS.SET_ANNUAL_RETURN:
+      return {
+        ...state,
+        annualReturn: action.payload,
+      };
+
+    case ACTIONS.ADD_INVESTMENT_PERIOD:
+      return {
+        ...state,
+        investmentPeriods: [
+          ...state.investmentPeriods,
+          { years: 10, monthlyInvestment: 15000 },
+        ],
+      };
+
+    case ACTIONS.DELETE_INVESTMENT_PERIOD:
+      if (state.investmentPeriods.length <= 1) return state;
+      return {
+        ...state,
+        investmentPeriods: state.investmentPeriods.filter(
+          (_, index) => index !== action.payload
+        ),
+      };
+
+    case ACTIONS.UPDATE_INVESTMENT_PERIOD:
+      return {
+        ...state,
+        investmentPeriods: state.investmentPeriods.map((period, index) =>
+          index === action.payload.index
+            ? { ...period, [action.payload.field]: action.payload.value }
+            : period
+        ),
+      };
+
+    default:
+      return state;
+  }
+};
+
 const InvestmentCalculator = () => {
-  const [startingBalance, setStartingBalance] = useState(0);
-  const [investmentPeriods, setInvestmentPeriods] = useState([
-    { years: 10, monthlyInvestment: 15000 },
-  ]);
-  const [annualReturn, setAnnualReturn] = useState(10.0);
+  const [state, dispatch] = useReducer(investmentReducer, initialState);
+  const { startingBalance, investmentPeriods, annualReturn } = state;
 
   const addInvestmentPeriod = () => {
-    setInvestmentPeriods([
-      ...investmentPeriods,
-      { years: 10, monthlyInvestment: 15000 },
-    ]);
+    dispatch({ type: ACTIONS.ADD_INVESTMENT_PERIOD });
   };
 
   const deleteInvestmentPeriod = (index) => {
-    if (investmentPeriods.length > 1) {
-      const newPeriods = [...investmentPeriods];
-      newPeriods.splice(index, 1);
-      setInvestmentPeriods(newPeriods);
-    }
+    dispatch({ type: ACTIONS.DELETE_INVESTMENT_PERIOD, payload: index });
   };
 
   const updatePeriod = (index, field, value) => {
-    const newPeriods = [...investmentPeriods];
-    newPeriods[index][field] = value;
-    setInvestmentPeriods(newPeriods);
+    dispatch({
+      type: ACTIONS.UPDATE_INVESTMENT_PERIOD,
+      payload: { index, field, value },
+    });
+  };
+
+  const setStartingBalance = (value) => {
+    dispatch({ type: ACTIONS.SET_STARTING_BALANCE, payload: value });
+  };
+
+  const setAnnualReturn = (value) => {
+    dispatch({ type: ACTIONS.SET_ANNUAL_RETURN, payload: value });
   };
 
   const calculateInvestmentGrowth = () => {
