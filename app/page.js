@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import Footer from "@/components/footer";
 import {
   LineChart,
   Line,
@@ -17,6 +18,7 @@ import {
 } from "recharts";
 
 const InvestmentCalculator = () => {
+  const [startingBalance, setStartingBalance] = useState(0);
   const [investmentPeriods, setInvestmentPeriods] = useState([
     { years: 10, monthlyInvestment: 15000 },
   ]);
@@ -47,10 +49,10 @@ const InvestmentCalculator = () => {
     const monthlyReturn = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
 
     const data = [];
-    let balance = 0;
+    let balance = startingBalance;
     let currentDate = new Date();
 
-    // Add the initial entry (0 balance, start of period)
+    // Add the initial entry (starting balance, start of period)
     data.push({
       date: currentDate.toISOString().split("T")[0],
       balance: balance,
@@ -86,7 +88,7 @@ const InvestmentCalculator = () => {
   // Calculate breakdown data
   const calculateBreakdown = () => {
     const breakdown = [];
-    let openingBalance = 0;
+    let openingBalance = startingBalance;
     let startYear = new Date().getFullYear();
 
     investmentPeriods.forEach((period, index) => {
@@ -130,6 +132,20 @@ const InvestmentCalculator = () => {
 
       <Card>
         <CardContent className="p-6 space-y-6">
+          <div>
+            <label className="text-sm">Starting balance (R)</label>
+            <Input
+              type="number"
+              min={0}
+              step={1000}
+              value={startingBalance}
+              onChange={(e) =>
+                setStartingBalance(parseFloat(e.target.value) || 0)
+              }
+              placeholder="Enter your starting balance"
+            />
+          </div>
+
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Investment Periods</h3>
             {investmentPeriods.map((period, index) => (
@@ -318,22 +334,7 @@ const InvestmentCalculator = () => {
               </div>
             </CardContent>
           </Card>
-          <footer>
-            <div className="flex justify-center pt-6">
-              <p>
-                Built by{" "}
-                <a
-                  className="underline text-blue-500"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href="https://www.linkedin.com/in/karl-alexander-meier-mattern-16a3b919a/"
-                >
-                  Karl-Alexander
-                </a>{" "}
-                with 💜
-              </p>
-            </div>
-          </footer>
+          <Footer />
         </>
       )}
     </div>
