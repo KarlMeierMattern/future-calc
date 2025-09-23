@@ -69,11 +69,14 @@ export default function InvestmentInfo() {
                   step={100}
                   value={period.monthlyInvestment}
                   onChange={(e) =>
-                    updatePeriod(
-                      index,
-                      "monthlyInvestment",
-                      parseFloat(e.target.value)
-                    )
+                    dispatch({
+                      type: "UPDATE_INVESTMENT_PERIOD",
+                      payload: {
+                        index,
+                        field: "monthlyInvestment",
+                        value: parseFloat(e.target.value) || 0,
+                      },
+                    })
                   }
                 />
               </div>

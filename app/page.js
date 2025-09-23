@@ -149,8 +149,8 @@ const InvestmentCalculator = () => {
   };
 
   return (
-    <InvestmentContext value={state}>
-      <InvestmentDispatchContext value={dispatch}>
+    <InvestmentContext.Provider value={state}>
+      <InvestmentDispatchContext.Provider value={dispatch}>
         <div className="max-w-4xl mx-auto p-4 space-y-6">
           <Header />
           <InvestmentInfo />
@@ -168,8 +168,8 @@ const InvestmentCalculator = () => {
             </>
           )}
         </div>
-      </InvestmentDispatchContext>
-    </InvestmentContext>
+      </InvestmentDispatchContext.Provider>
+    </InvestmentContext.Provider>
   );
 };
 
