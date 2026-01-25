@@ -15,11 +15,14 @@ export default function InvestmentInfo() {
     annualReturn,
     dividendYield,
     reinvestDividends,
+    inflationRate,
+    taxBracket,
+    withdrawalPercentage,
   } = useContext(InvestmentContext);
 
   const dispatch = useContext(InvestmentDispatchContext);
   const [localStartingBalance, setLocalStartingBalance] = useState(
-    startingBalance === 0 ? "" : startingBalance.toString()
+    startingBalance === 0 ? "" : startingBalance.toString(),
   );
   const isEditingRef = useRef(false);
   const [localPeriodValues, setLocalPeriodValues] = useState({});
@@ -27,7 +30,7 @@ export default function InvestmentInfo() {
   useEffect(() => {
     if (!isEditingRef.current) {
       setLocalStartingBalance(
-        startingBalance === 0 ? "" : startingBalance.toString()
+        startingBalance === 0 ? "" : startingBalance.toString(),
       );
     }
   }, [startingBalance]);
@@ -150,7 +153,8 @@ export default function InvestmentInfo() {
                   min={0}
                   step={100}
                   value={
-                    localPeriodValues[`${index}-monthlyInvestment`] !== undefined
+                    localPeriodValues[`${index}-monthlyInvestment`] !==
+                    undefined
                       ? localPeriodValues[`${index}-monthlyInvestment`]
                       : period.monthlyInvestment || ""
                   }
@@ -177,7 +181,8 @@ export default function InvestmentInfo() {
                   onFocus={() => {
                     setLocalPeriodValues((prev) => ({
                       ...prev,
-                      [`${index}-monthlyInvestment`]: period.monthlyInvestment?.toString() || "",
+                      [`${index}-monthlyInvestment`]:
+                        period.monthlyInvestment?.toString() || "",
                     }));
                   }}
                   onBlur={(e) => {
@@ -223,19 +228,34 @@ export default function InvestmentInfo() {
 
         <div>
           <label className="text-sm">Expected annual return (%)</label>
-          <Slider
-            value={[annualReturn]}
-            onValueChange={(value) =>
-              dispatch({
-                type: "SET_ANNUAL_RETURN",
-                payload: value[0],
-              })
-            }
-            min={0}
-            max={100}
-            step={0.1}
-            className="mt-2"
-          />
+          <div className="flex gap-2 items-center">
+            <Slider
+              value={[annualReturn]}
+              onValueChange={(value) =>
+                dispatch({
+                  type: "SET_ANNUAL_RETURN",
+                  payload: value[0],
+                })
+              }
+              min={0}
+              max={100}
+              step={0.1}
+              className="mt-2 flex-1"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                dispatch({
+                  type: "SET_ANNUAL_RETURN",
+                  payload: 10.0,
+                })
+              }
+              className="ml-2"
+            >
+              S&P 10%
+            </Button>
+          </div>
           <div className="text-right text-sm text-muted-foreground mt-1">
             {annualReturn.toFixed(1)}%
           </div>
@@ -283,6 +303,92 @@ export default function InvestmentInfo() {
             </label>
           </div>
         )}
+
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4">Inflation & Tax</h3>
+          <div>
+            <label className="text-sm">Expected inflation rate (%)</label>
+            <Slider
+              value={[inflationRate]}
+              onValueChange={(value) =>
+                dispatch({
+                  type: "SET_INFLATION_RATE",
+                  payload: value[0],
+                })
+              }
+              min={0}
+              max={10}
+              step={0.1}
+              className="mt-2"
+            />
+            <div className="text-right text-sm text-muted-foreground mt-1">
+              {inflationRate.toFixed(1)}%
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="text-sm">Tax bracket (%)</label>
+            <Slider
+              value={[taxBracket]}
+              onValueChange={(value) =>
+                dispatch({
+                  type: "SET_TAX_BRACKET",
+                  payload: value[0],
+                })
+              }
+              min={0}
+              max={45}
+              step={1}
+              className="mt-2"
+            />
+            <div className="text-right text-sm text-muted-foreground mt-1">
+              {taxBracket}%
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-2">
+            Tax is applied to withdrawals as they occur (subject to R40k annual
+            exclusion). Remaining gains taxed at maturity.
+          </p>
+        </div>
+
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4">Withdrawals</h3>
+          <div>
+            <label className="text-sm">Monthly withdrawal rate (%)</label>
+            <div className="flex gap-2 items-center">
+              <Slider
+                value={[withdrawalPercentage]}
+                onValueChange={(value) =>
+                  dispatch({
+                    type: "SET_WITHDRAWAL_PERCENTAGE",
+                    payload: value[0],
+                  })
+                }
+                min={0}
+                max={10}
+                step={0.1}
+                className="mt-2 flex-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  dispatch({
+                    type: "SET_WITHDRAWAL_PERCENTAGE",
+                    payload: 4.0,
+                  })
+                }
+                className="ml-2"
+              >
+                4% Rule
+              </Button>
+            </div>
+            <div className="text-right text-sm text-muted-foreground mt-1">
+              {withdrawalPercentage.toFixed(2)}% (annual)
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
