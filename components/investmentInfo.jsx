@@ -6,13 +6,60 @@ import {
   InvestmentContext,
   InvestmentDispatchContext,
 } from "@/utils/investmentContext";
-import { useContext } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 
 export default function InvestmentInfo() {
-  const { startingBalance, investmentPeriods, annualReturn } =
-    useContext(InvestmentContext);
+  const {
+    startingBalance,
+    investmentPeriods,
+    annualReturn,
+    dividendYield,
+    reinvestDividends,
+  } = useContext(InvestmentContext);
 
   const dispatch = useContext(InvestmentDispatchContext);
+  const [localStartingBalance, setLocalStartingBalance] = useState(
+    startingBalance === 0 ? "" : startingBalance.toString()
+  );
+  const isEditingRef = useRef(false);
+  const [localPeriodValues, setLocalPeriodValues] = useState({});
+
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setLocalStartingBalance(
+        startingBalance === 0 ? "" : startingBalance.toString()
+      );
+    }
+  }, [startingBalance]);
+
+  const handleStartingBalanceFocus = () => {
+    isEditingRef.current = true;
+    if (startingBalance === 0) {
+      setLocalStartingBalance("");
+    } else {
+      setLocalStartingBalance(startingBalance.toString());
+    }
+  };
+
+  const handleStartingBalanceBlur = () => {
+    isEditingRef.current = false;
+    const value = parseFloat(localStartingBalance) || 0;
+    setLocalStartingBalance(value === 0 ? "" : value.toString());
+    dispatch({
+      type: "SET_STARTING_BALANCE",
+      payload: value,
+    });
+  };
+
+  const handleStartingBalanceChange = (e) => {
+    const value = e.target.value;
+    setLocalStartingBalance(value);
+    const numValue = parseFloat(value) || 0;
+    dispatch({
+      type: "SET_STARTING_BALANCE",
+      payload: numValue,
+    });
+  };
 
   return (
     <Card>
@@ -23,14 +70,11 @@ export default function InvestmentInfo() {
             type="number"
             min={0}
             step={1000}
-            value={startingBalance}
-            onChange={(e) =>
-              dispatch({
-                type: "SET_STARTING_BALANCE",
-                payload: parseFloat(e.target.value) || 0,
-              })
-            }
-            placeholder="Enter your starting balance"
+            value={localStartingBalance}
+            onChange={handleStartingBalanceChange}
+            onFocus={handleStartingBalanceFocus}
+            onBlur={handleStartingBalanceBlur}
+            placeholder="0"
           />
         </div>
 
@@ -48,17 +92,55 @@ export default function InvestmentInfo() {
                 <Input
                   type="number"
                   min={1}
-                  value={period.years}
-                  onChange={(e) =>
+                  value={
+                    localPeriodValues[`${index}-years`] !== undefined
+                      ? localPeriodValues[`${index}-years`]
+                      : period.years || ""
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setLocalPeriodValues((prev) => ({
+                      ...prev,
+                      [`${index}-years`]: value,
+                    }));
+                    if (value !== "") {
+                      const numValue = parseInt(value);
+                      if (!isNaN(numValue) && numValue >= 1) {
+                        dispatch({
+                          type: "UPDATE_INVESTMENT_PERIOD",
+                          payload: {
+                            index,
+                            field: "years",
+                            value: numValue,
+                          },
+                        });
+                      }
+                    }
+                  }}
+                  onFocus={() => {
+                    setLocalPeriodValues((prev) => ({
+                      ...prev,
+                      [`${index}-years`]: period.years?.toString() || "",
+                    }));
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value;
+                    const numValue = parseInt(value) || 1;
+                    setLocalPeriodValues((prev) => {
+                      const newState = { ...prev };
+                      delete newState[`${index}-years`];
+                      return newState;
+                    });
                     dispatch({
                       type: "UPDATE_INVESTMENT_PERIOD",
                       payload: {
                         index,
                         field: "years",
-                        value: parseInt(e.target.value),
+                        value: numValue,
                       },
-                    })
-                  }
+                    });
+                  }}
+                  placeholder="10"
                 />
               </div>
               <div>
@@ -67,17 +149,55 @@ export default function InvestmentInfo() {
                   type="number"
                   min={0}
                   step={100}
-                  value={period.monthlyInvestment}
-                  onChange={(e) =>
+                  value={
+                    localPeriodValues[`${index}-monthlyInvestment`] !== undefined
+                      ? localPeriodValues[`${index}-monthlyInvestment`]
+                      : period.monthlyInvestment || ""
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setLocalPeriodValues((prev) => ({
+                      ...prev,
+                      [`${index}-monthlyInvestment`]: value,
+                    }));
+                    if (value !== "") {
+                      const numValue = parseFloat(value);
+                      if (!isNaN(numValue) && numValue >= 0) {
+                        dispatch({
+                          type: "UPDATE_INVESTMENT_PERIOD",
+                          payload: {
+                            index,
+                            field: "monthlyInvestment",
+                            value: numValue,
+                          },
+                        });
+                      }
+                    }
+                  }}
+                  onFocus={() => {
+                    setLocalPeriodValues((prev) => ({
+                      ...prev,
+                      [`${index}-monthlyInvestment`]: period.monthlyInvestment?.toString() || "",
+                    }));
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value;
+                    const numValue = parseFloat(value) || 0;
+                    setLocalPeriodValues((prev) => {
+                      const newState = { ...prev };
+                      delete newState[`${index}-monthlyInvestment`];
+                      return newState;
+                    });
                     dispatch({
                       type: "UPDATE_INVESTMENT_PERIOD",
                       payload: {
                         index,
                         field: "monthlyInvestment",
-                        value: parseFloat(e.target.value) || 0,
+                        value: numValue,
                       },
-                    })
-                  }
+                    });
+                  }}
+                  placeholder="0"
                 />
               </div>
               {investmentPeriods.length > 1 && (
@@ -112,7 +232,7 @@ export default function InvestmentInfo() {
               })
             }
             min={0}
-            max={20}
+            max={100}
             step={0.1}
             className="mt-2"
           />
@@ -120,6 +240,49 @@ export default function InvestmentInfo() {
             {annualReturn.toFixed(1)}%
           </div>
         </div>
+
+        <div>
+          <label className="text-sm">Annual dividend yield (%)</label>
+          <Slider
+            value={[dividendYield]}
+            onValueChange={(value) =>
+              dispatch({
+                type: "SET_DIVIDEND_YIELD",
+                payload: value[0],
+              })
+            }
+            min={0}
+            max={20}
+            step={0.1}
+            className="mt-2"
+          />
+          <div className="text-right text-sm text-muted-foreground mt-1">
+            {dividendYield.toFixed(1)}%
+          </div>
+        </div>
+
+        {dividendYield > 0 && (
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="reinvestDividends"
+              checked={reinvestDividends}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_REINVEST_DIVIDENDS",
+                  payload: e.target.checked,
+                })
+              }
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label
+              htmlFor="reinvestDividends"
+              className="text-sm cursor-pointer"
+            >
+              Reinvest dividends
+            </label>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
