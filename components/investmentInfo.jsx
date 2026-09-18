@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -55,21 +55,18 @@ export default function InvestmentInfo() {
   };
 
   const handleStartingBalanceChange = (e) => {
-    const value = e.target.value;
-    setLocalStartingBalance(value);
-    const numValue = parseFloat(value) || 0;
-    dispatch({
-      type: "SET_STARTING_BALANCE",
-      payload: numValue,
-    });
+    setLocalStartingBalance(e.target.value);
   };
 
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
         <div>
-          <label className="text-sm">Starting balance (R)</label>
+          <label htmlFor="startingBalance" className="text-sm">
+            Starting balance (R)
+          </label>
           <Input
+            id="startingBalance"
             type="number"
             min={0}
             step={1000}
@@ -85,26 +82,27 @@ export default function InvestmentInfo() {
           <h3 className="text-lg font-semibold">Investment Periods</h3>
           {investmentPeriods.map((period, index) => (
             <div
-              key={index}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+              key={period.id}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 md:items-end"
             >
               <div>
-                <label className="text-sm">
+                <label htmlFor={`period-${period.id}-years`} className="text-sm">
                   Investment period {index + 1} (years)
                 </label>
                 <Input
+                  id={`period-${period.id}-years`}
                   type="number"
                   min={1}
                   value={
-                    localPeriodValues[`${index}-years`] !== undefined
-                      ? localPeriodValues[`${index}-years`]
+                    localPeriodValues[`${period.id}-years`] !== undefined
+                      ? localPeriodValues[`${period.id}-years`]
                       : period.years || ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
                     setLocalPeriodValues((prev) => ({
                       ...prev,
-                      [`${index}-years`]: value,
+                      [`${period.id}-years`]: value,
                     }));
                     if (value !== "") {
                       const numValue = parseInt(value);
@@ -112,7 +110,7 @@ export default function InvestmentInfo() {
                         dispatch({
                           type: "UPDATE_INVESTMENT_PERIOD",
                           payload: {
-                            index,
+                            id: period.id,
                             field: "years",
                             value: numValue,
                           },
@@ -123,7 +121,7 @@ export default function InvestmentInfo() {
                   onFocus={() => {
                     setLocalPeriodValues((prev) => ({
                       ...prev,
-                      [`${index}-years`]: period.years?.toString() || "",
+                      [`${period.id}-years`]: period.years?.toString() || "",
                     }));
                   }}
                   onBlur={(e) => {
@@ -131,13 +129,13 @@ export default function InvestmentInfo() {
                     const numValue = parseInt(value) || 1;
                     setLocalPeriodValues((prev) => {
                       const newState = { ...prev };
-                      delete newState[`${index}-years`];
+                      delete newState[`${period.id}-years`];
                       return newState;
                     });
                     dispatch({
                       type: "UPDATE_INVESTMENT_PERIOD",
                       payload: {
-                        index,
+                        id: period.id,
                         field: "years",
                         value: numValue,
                       },
@@ -147,22 +145,25 @@ export default function InvestmentInfo() {
                 />
               </div>
               <div>
-                <label className="text-sm">Monthly investment (R)</label>
+                <label htmlFor={`period-${period.id}-monthly`} className="text-sm">
+                  Monthly investment (R)
+                </label>
                 <Input
+                  id={`period-${period.id}-monthly`}
                   type="number"
                   min={0}
                   step={100}
                   value={
-                    localPeriodValues[`${index}-monthlyInvestment`] !==
+                    localPeriodValues[`${period.id}-monthlyInvestment`] !==
                     undefined
-                      ? localPeriodValues[`${index}-monthlyInvestment`]
+                      ? localPeriodValues[`${period.id}-monthlyInvestment`]
                       : period.monthlyInvestment || ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
                     setLocalPeriodValues((prev) => ({
                       ...prev,
-                      [`${index}-monthlyInvestment`]: value,
+                      [`${period.id}-monthlyInvestment`]: value,
                     }));
                     if (value !== "") {
                       const numValue = parseFloat(value);
@@ -170,7 +171,7 @@ export default function InvestmentInfo() {
                         dispatch({
                           type: "UPDATE_INVESTMENT_PERIOD",
                           payload: {
-                            index,
+                            id: period.id,
                             field: "monthlyInvestment",
                             value: numValue,
                           },
@@ -181,7 +182,7 @@ export default function InvestmentInfo() {
                   onFocus={() => {
                     setLocalPeriodValues((prev) => ({
                       ...prev,
-                      [`${index}-monthlyInvestment`]:
+                      [`${period.id}-monthlyInvestment`]:
                         period.monthlyInvestment?.toString() || "",
                     }));
                   }}
@@ -190,13 +191,13 @@ export default function InvestmentInfo() {
                     const numValue = parseFloat(value) || 0;
                     setLocalPeriodValues((prev) => {
                       const newState = { ...prev };
-                      delete newState[`${index}-monthlyInvestment`];
+                      delete newState[`${period.id}-monthlyInvestment`];
                       return newState;
                     });
                     dispatch({
                       type: "UPDATE_INVESTMENT_PERIOD",
                       payload: {
-                        index,
+                        id: period.id,
                         field: "monthlyInvestment",
                         value: numValue,
                       },
@@ -207,12 +208,11 @@ export default function InvestmentInfo() {
               </div>
               {investmentPeriods.length > 1 && (
                 <Button
-                  className="mt-6"
                   variant="destructive"
                   onClick={() =>
                     dispatch({
                       type: "DELETE_INVESTMENT_PERIOD",
-                      payload: index,
+                      payload: period.id,
                     })
                   }
                 >
@@ -227,9 +227,13 @@ export default function InvestmentInfo() {
         </div>
 
         <div>
-          <label className="text-sm">Expected annual return (%)</label>
-          <div className="flex gap-2 items-center">
+          <label id="annualReturnLabel" className="text-sm">
+            Expected annual return (%)
+          </label>
+          <div className="flex flex-wrap gap-2 items-center">
             <Slider
+              id="annualReturn"
+              aria-labelledby="annualReturnLabel annualReturnValue"
               value={[annualReturn]}
               onValueChange={(value) =>
                 dispatch({
@@ -240,7 +244,7 @@ export default function InvestmentInfo() {
               min={0}
               max={100}
               step={0.1}
-              className="mt-2 flex-1"
+              className="mt-2 flex-1 min-w-[200px]"
             />
             <Button
               variant="outline"
@@ -251,19 +255,26 @@ export default function InvestmentInfo() {
                   payload: 10.0,
                 })
               }
-              className="ml-2"
             >
               S&P 10%
             </Button>
           </div>
-          <div className="text-right text-sm text-muted-foreground mt-1">
+          <div
+            id="annualReturnValue"
+            className="text-right text-sm text-muted-foreground mt-1"
+            aria-live="polite"
+          >
             {annualReturn.toFixed(1)}%
           </div>
         </div>
 
         <div>
-          <label className="text-sm">Annual dividend yield (%)</label>
+          <label id="dividendYieldLabel" className="text-sm">
+            Annual dividend yield (%)
+          </label>
           <Slider
+            id="dividendYield"
+            aria-labelledby="dividendYieldLabel dividendYieldValue"
             value={[dividendYield]}
             onValueChange={(value) =>
               dispatch({
@@ -276,7 +287,11 @@ export default function InvestmentInfo() {
             step={0.1}
             className="mt-2"
           />
-          <div className="text-right text-sm text-muted-foreground mt-1">
+          <div
+            id="dividendYieldValue"
+            className="text-right text-sm text-muted-foreground mt-1"
+            aria-live="polite"
+          >
             {dividendYield.toFixed(1)}%
           </div>
         </div>
@@ -307,8 +322,12 @@ export default function InvestmentInfo() {
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold mb-4">Inflation & Tax</h3>
           <div>
-            <label className="text-sm">Expected inflation rate (%)</label>
+            <label id="inflationRateLabel" className="text-sm">
+              Expected inflation rate (%)
+            </label>
             <Slider
+              id="inflationRate"
+              aria-labelledby="inflationRateLabel inflationRateValue"
               value={[inflationRate]}
               onValueChange={(value) =>
                 dispatch({
@@ -321,14 +340,22 @@ export default function InvestmentInfo() {
               step={0.1}
               className="mt-2"
             />
-            <div className="text-right text-sm text-muted-foreground mt-1">
+            <div
+              id="inflationRateValue"
+              className="text-right text-sm text-muted-foreground mt-1"
+              aria-live="polite"
+            >
               {inflationRate.toFixed(1)}%
             </div>
           </div>
 
           <div className="mt-4">
-            <label className="text-sm">Tax bracket (%)</label>
+            <label id="taxBracketLabel" className="text-sm">
+              Tax bracket (%)
+            </label>
             <Slider
+              id="taxBracket"
+              aria-labelledby="taxBracketLabel taxBracketValue"
               value={[taxBracket]}
               onValueChange={(value) =>
                 dispatch({
@@ -341,7 +368,11 @@ export default function InvestmentInfo() {
               step={1}
               className="mt-2"
             />
-            <div className="text-right text-sm text-muted-foreground mt-1">
+            <div
+              id="taxBracketValue"
+              className="text-right text-sm text-muted-foreground mt-1"
+              aria-live="polite"
+            >
               {taxBracket}%
             </div>
           </div>
@@ -355,9 +386,13 @@ export default function InvestmentInfo() {
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold mb-4">Withdrawals</h3>
           <div>
-            <label className="text-sm">Monthly withdrawal rate (%)</label>
-            <div className="flex gap-2 items-center">
+            <label id="withdrawalRateLabel" className="text-sm">
+              Annual withdrawal rate (%)
+            </label>
+            <div className="flex flex-wrap gap-2 items-center">
               <Slider
+                id="withdrawalRate"
+                aria-labelledby="withdrawalRateLabel withdrawalRateValue"
                 value={[withdrawalPercentage]}
                 onValueChange={(value) =>
                   dispatch({
@@ -368,7 +403,7 @@ export default function InvestmentInfo() {
                 min={0}
                 max={10}
                 step={0.1}
-                className="mt-2 flex-1"
+                className="mt-2 flex-1 min-w-[200px]"
               />
               <Button
                 variant="outline"
@@ -379,13 +414,16 @@ export default function InvestmentInfo() {
                     payload: 4.0,
                   })
                 }
-                className="ml-2"
               >
                 4% Rule
               </Button>
             </div>
-            <div className="text-right text-sm text-muted-foreground mt-1">
-              {withdrawalPercentage.toFixed(2)}% (annual)
+            <div
+              id="withdrawalRateValue"
+              className="text-right text-sm text-muted-foreground mt-1"
+              aria-live="polite"
+            >
+              {withdrawalPercentage.toFixed(2)}% of portfolio per year
             </div>
           </div>
         </div>

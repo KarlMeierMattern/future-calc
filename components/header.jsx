@@ -1,14 +1,12 @@
-import { CardHeader, CardTitle } from "@/components/ui/card";
-
 export default function Header() {
   return (
-    <CardHeader>
-      <CardTitle className="text-3xl font-bold">
+    <header className="space-y-1.5">
+      <h1 className="text-3xl font-bold tracking-tight">
         Investment Calculator
-      </CardTitle>
+      </h1>
       <p className="text-muted-foreground">
-        Calculate the future value of your monthly investments.
+        Calculate the future value of your monthly investments in ZAR.
       </p>
-    </CardHeader>
+    </header>
   );
 }
