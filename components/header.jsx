@@ -1,6 +1,6 @@
 export default function Header() {
   return (
-    <header className="space-y-1.5">
+    <header className="space-y-1.5 print:mb-4">
       <h1 className="text-3xl font-bold tracking-tight">
         Investment Calculator
       </h1>

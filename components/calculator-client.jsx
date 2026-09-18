@@ -4,6 +4,8 @@ import { useReducer, useMemo } from "react";
 import InvestmentInfo from "@/components/investmentInfo";
 import Results from "@/components/results";
 import InvestmentBreakdown from "@/components/investmentBreakdown";
+import PrintAssumptions from "@/components/print-assumptions";
+import PrintButton from "@/components/print-button";
 import {
   InvestmentContext,
   InvestmentDispatchContext,
@@ -42,7 +44,11 @@ export default function CalculatorClient() {
   return (
     <InvestmentContext.Provider value={state}>
       <InvestmentDispatchContext.Provider value={dispatch}>
+        <div className="flex justify-end print:hidden">
+          <PrintButton />
+        </div>
         <InvestmentInfo />
+        <PrintAssumptions />
         <Results
           {...summary}
           calculatedData={calculatedData}

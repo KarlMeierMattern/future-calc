@@ -17,7 +17,7 @@ export default function Results({
   taxBracket,
 }) {
   return (
-    <Card>
+    <Card className="print:shadow-none print:break-inside-avoid">
       <CardHeader>
         <CardTitle as="h2">Results</CardTitle>
       </CardHeader>

@@ -33,6 +33,13 @@ function buildLinePath(points) {
     .join(" ");
 }
 
+function formatMonthYear(dateString) {
+  return new Date(dateString).toLocaleDateString("en-ZA", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function GrowthChart({ calculatedData, inflationRate }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const chartLabelId = useId();
@@ -141,7 +148,7 @@ export default function GrowthChart({ calculatedData, inflationRate }) {
       <div
         role="img"
         aria-labelledby={chartLabelId}
-        className="h-[250px] sm:h-[300px] md:h-[400px] motion-reduce:[&_*]:!transition-none"
+        className="h-[250px] sm:h-[300px] md:h-[400px] print:h-[220px] motion-reduce:[&_*]:!transition-none"
       >
         <p id={chartLabelId} className="sr-only">
           Investment growth chart from {startYear} to {endYear}. Final balance{" "}
@@ -232,11 +239,11 @@ export default function GrowthChart({ calculatedData, inflationRate }) {
 
       {hoverPoint && (
         <div
-          className="mt-2 rounded-md border bg-background px-3 py-2 text-sm shadow-sm"
+          className="mt-2 rounded-md border bg-background px-3 py-2 text-sm shadow-sm print:hidden"
           aria-live="polite"
         >
           <div className="font-medium">
-            {new Date(hoverPoint.entry.date).toLocaleDateString()}
+            {formatMonthYear(hoverPoint.entry.date)}
           </div>
           <div>
             Balance: {formatCurrency(hoverPoint.entry.balance)}
@@ -269,27 +276,6 @@ export default function GrowthChart({ calculatedData, inflationRate }) {
         )}
       </div>
 
-      <table className="sr-only">
-        <caption>Investment growth data</caption>
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Balance</th>
-            {inflationRate > 0 && <th scope="col">Today&apos;s value</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sampled.map((entry) => (
-            <tr key={entry.date}>
-              <td>{entry.date}</td>
-              <td>{formatCurrency(entry.balance)}</td>
-              {inflationRate > 0 && (
-                <td>{formatCurrency(entry.balanceAfterInflation)}</td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

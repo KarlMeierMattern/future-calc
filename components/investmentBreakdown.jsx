@@ -66,12 +66,12 @@ export default function InvestmentBreakdown({ breakdown, inflationRate }) {
   if (breakdown.length === 0) return null;
 
   return (
-    <Card>
+    <Card className="print:shadow-none print:break-inside-avoid">
       <CardHeader>
         <CardTitle as="h2">Investment Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4 md:hidden">
+        <div className="space-y-4 md:hidden print:hidden">
           {breakdown.map((item) => (
             <BreakdownCard
               key={item.period}
@@ -83,7 +83,7 @@ export default function InvestmentBreakdown({ breakdown, inflationRate }) {
           ))}
         </div>
 
-        <div className="hidden md:block overflow-x-auto -mx-2 px-2">
+        <div className="hidden md:block print:block overflow-x-auto -mx-2 px-2">
           <table className="w-full min-w-[640px] text-sm">
             <caption className="sr-only">
               Investment breakdown by period

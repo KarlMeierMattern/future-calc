@@ -59,7 +59,7 @@ export default function InvestmentInfo() {
   };
 
   return (
-    <Card>
+    <Card className="print:hidden">
       <CardContent className="p-6 space-y-6">
         <div>
           <label htmlFor="startingBalance" className="text-sm">
